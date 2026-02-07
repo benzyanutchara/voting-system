@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Candidate</title>
+  <link rel="stylesheet" href="./CandidatePage.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="wrap">
+      <h1 class="title">Voting System 953713 - 2568</h1>
+
+      <nav class="segmented">
+        <button class="seg-btn" type="button">ผลการเลือกตั้ง</button>
+        <button class="seg-btn active" type="button">พรรคการเมือง</button>
+        <button class="seg-btn" type="button">ลงคะแนน</button>
+      </nav>
+
+      <section class="panel">
+        <div class="panel-scroll">
+          <div class="grid" id="grid"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const parties = Array.from({length: 7}, (_, i) => ({ id:i+1, no:11, name:"พรรคสีส้ม" }));
+    document.getElementById("grid").innerHTML = parties.map(p => `
+      <article class="card" tabindex="0">
+        <div class="card-label">หมายเลขพรรค</div>
+        <div class="card-no">${p.no}</div>
+        <div class="card-mid">
+          <div class="ring"><div class="plus">+</div></div>
+        </div>
+        <div class="card-name">${p.name}</div>
+      </article>
+    `).join("");
+  </script>
+</body>
+</html>
