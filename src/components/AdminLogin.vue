@@ -3,7 +3,7 @@
     <div class="wrap">
       <h1 class="title">Voting System 953713 - 2568</h1>
 
-      <nav class="segmented" aria-label="Voting navigation">
+      <nav class="segmented" aria-label="Navigation">
         <button class="seg-btn" type="button" @click="$router.push('/')">
           <span class="seg-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -13,7 +13,6 @@
           </span>
           ผลการเลือกตั้ง
         </button>
-
         <button class="seg-btn" type="button" @click="$router.push('/parties')">
           <span class="seg-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -25,21 +24,19 @@
           </span>
           พรรคการเมือง
         </button>
-
-        <button class="seg-btn active" type="button" :aria-selected="true">
+        <button class="seg-btn active" type="button">
           <span class="seg-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <path d="M20 6.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M9 12l2 2 4-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="2"/>
             </svg>
           </span>
-          ลงคะแนน
+          Admin
         </button>
       </nav>
 
       <section class="card">
         <div class="login-container">
-          <!-- Login Header -->
           <div class="login-header">
             <span class="lock-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
@@ -47,21 +44,18 @@
                 <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </span>
-            <h2 class="login-title">Voter Login</h2>
+            <h2 class="login-title">Admin Login</h2>
           </div>
 
-          <!-- Login Form -->
           <form @submit.prevent="handleLogin">
-            <p class="info-text">กรอกรหัสประจำตัวประชาชน 13 หลัก</p>
-            
+            <p class="info-text">กรอกข้อมูลผู้ดูแลระบบ</p>
+
             <div class="input-group">
               <input
-                v-model="nationalId"
+                v-model="username"
                 type="text"
-                placeholder="กรอกเลขบัตรประชาชน 13 หลัก"
+                placeholder="Username"
                 class="input-field"
-                maxlength="13"
-                pattern="[0-9]{13}"
                 required
               />
             </div>
@@ -70,7 +64,7 @@
               <input
                 v-model="password"
                 type="password"
-                placeholder="กรอกรหัสผ่าน"
+                placeholder="Password"
                 class="input-field"
                 required
               />
@@ -83,11 +77,7 @@
             </button>
 
             <div class="register-link">
-              <a href="#" @click.prevent="$router.push('/register')">ลงทะเบียนผู้ใช้ใหม่</a>
-            </div>
-
-            <div class="register-link">
-              <a href="#" @click.prevent="$router.push('/admin/login')">เข้าสู่ระบบสำหรับผู้ดูแล</a>
+              <a href="#" @click.prevent="$router.push('/login')">เข้าสู่ระบบสำหรับผู้ลงคะแนน</a>
             </div>
           </form>
         </div>
@@ -103,20 +93,14 @@ import Swal from "sweetalert2";
 
 const authStore = useAuthStore();
 
-const nationalId = ref("");
+const username = ref("");
 const password = ref("");
 const loading = ref(false);
 const errorMsg = ref("");
 
 async function handleLogin() {
-  // ตรวจสอบว่ากรอกเลขบัตรประชาชน 13 หลัก
-  if (!nationalId.value || nationalId.value.length !== 13 || !/^[0-9]{13}$/.test(nationalId.value)) {
-    errorMsg.value = "กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง";
-    return;
-  }
-
-  if (!password.value) {
-    errorMsg.value = "กรุณากรอกรหัสผ่าน";
+  if (!username.value || !password.value) {
+    errorMsg.value = "กรุณากรอกข้อมูลให้ครบ";
     return;
   }
 
@@ -124,15 +108,16 @@ async function handleLogin() {
   errorMsg.value = "";
 
   try {
-    await authStore.login(nationalId.value, password.value);
+    await authStore.adminLogin(username.value, password.value);
     Swal.fire({
       icon: "success",
       title: "เข้าสู่ระบบสำเร็จ",
+      text: "ยินดีต้อนรับผู้ดูแลระบบ",
       timer: 1500,
       showConfirmButton: false,
     });
   } catch (err) {
-    errorMsg.value = err.response?.data?.error || "เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบข้อมูล";
+    errorMsg.value = err.response?.data?.error || "เข้าสู่ระบบไม่สำเร็จ";
   } finally {
     loading.value = false;
   }

@@ -111,7 +111,12 @@
               </thead>
 
               <tbody>
-                <tr v-for="r in visibleRows" :key="`${r.province}-${r.no}`">
+                <tr
+                  v-for="r in visibleRows"
+                  :key="`${r.province}-${r.no}`"
+                  class="clickable-row"
+                  @click="viewConstituencyResults(r)"
+                >
                   <td class="col-province">{{ r.province }}</td>
                   <td class="col-area">{{ r.area }}</td>
                   <td class="right col-no">{{ r.no }}</td>
@@ -158,7 +163,7 @@
         <!-- ลงคะแนน -->
         <div v-if="activeTab === 'vote'" class="vote-section">
           <p style="text-align: center; padding: 40px; color: #666;">
-            หน้าลงคะแนนกำลังพัฒนา...
+            กำลังนำไปหน้าลงคะแนน...
           </p>
         </div>
       </section>
@@ -227,30 +232,36 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { publicAPI } from "../api/public.api";
+import { useAuthStore } from "../stores/auth.store";
 
-// eslint-disable-next-line no-unused-vars
-const emit = defineEmits(['navigate']);
+const router = useRouter();
+const authStore = useAuthStore();
 
-/** ตรวจสอบสถานะ login */
-const checkLogin = () => {
-  const loginStatus = localStorage.getItem('isLoggedIn')
-  const userId = localStorage.getItem('userId')
-  return loginStatus === 'true' && userId
-}
-
-/** Tabs (ตอนนี้เน้นหน้าผลการเลือกตั้งก่อน) */
+/** Tabs */
 const activeTab = ref("results"); // results | parties | vote
 
-/** ฟังก์ชันสำหรับเปลี่ยน tab พร้อมตรวจสอบ login */
+/** Loading states */
+const loadingConstituencies = ref(false);
+const loadingParties = ref(false);
+
+/** ฟังก์ชันสำหรับเปลี่ยน tab */
 const changeTab = (tabName) => {
-  // ถ้าจะไป tab พรรคการเมืองหรือลงคะแนน ต้อง login ก่อน
-  if ((tabName === 'parties' || tabName === 'vote') && !checkLogin()) {
-    alert('กรุณาเข้าสู่ระบบก่อนเพื่อใช้งานฟีเจอร์นี้')
-    emit('navigate', 'VoterLogin')
-    return
+  if (tabName === 'vote') {
+    if (!authStore.isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+    router.push('/vote');
+    return;
   }
-  activeTab.value = tabName
+  if (tabName === 'parties') {
+    router.push('/parties');
+    return;
+  }
+  activeTab.value = tabName;
 }
 
 /** Dropdown filter */
@@ -260,27 +271,38 @@ const selectedProvince = ref("");
 const selectedParty = ref(null);
 
 /** Parties data */
-const parties = ref([
-  { id: 1, no: 1, name: "พรรคก้าวไกล" },
-  { id: 2, no: 2, name: "พรรคเพื่อไทย" },
-  { id: 3, no: 3, name: "พรรคประชาธิปัตย์" },
-  { id: 4, no: 4, name: "พรรคภูมิใจไทย" },
-  { id: 5, no: 5, name: "พรรคพลังประชารัฐ" },
-  { id: 6, no: 6, name: "พรรคเสรีรวมไทย" },
-  { id: 7, no: 7, name: "พรรคชาติไทยพัฒนา" },
-  { id: 8, no: 8, name: "พรรคไทยสร้างไทย" },
-]);
+const parties = ref([]);
 
 function selectParty(party) {
-  selectedParty.value = party;
+  fetchPartyDetails(party.id);
+}
+
+async function fetchPartyDetails(partyId) {
+  try {
+    const { data } = await publicAPI.getPartyDetails(partyId);
+    if (data.success) {
+      selectedParty.value = { ...data.data, no: data.data.id };
+    }
+  } catch (err) {
+    console.error('Failed to load party details:', err);
+    // Fallback: show the basic party info
+    const p = parties.value.find(p => p.id === partyId);
+    if (p) selectedParty.value = p;
+  }
 }
 
 function closeModal() {
   selectedParty.value = null;
 }
 
-/** Data */
-const rows = ref([
+function viewConstituencyResults(row) {
+  if (row.id) {
+    router.push(`/constituencies/${row.id}/results`);
+  }
+}
+
+/** Fallback data (used when API is unavailable) */
+const fallbackRows = [
   // กรุงเทพมหานคร (ชื่อเขตจริง)
   { province: "กรุงเทพมหานคร", area: "เขตพระนคร", no: 1 },
   { province: "กรุงเทพมหานคร", area: "เขตดุสิต", no: 2 },
@@ -434,7 +456,56 @@ const rows = ref([
   { province: "ภูเก็ต", area: "อำเภอเมืองภูเก็ต", no: 1 },
   { province: "ภูเก็ต", area: "อำเภอกะทู้", no: 2 },
   { province: "ภูเก็ต", area: "อำเภอถลาง", no: 3 }
-]);
+];
+
+const rows = ref([...fallbackRows]);
+
+/** Load data from API */
+onMounted(async () => {
+  // Load constituencies
+  loadingConstituencies.value = true;
+  try {
+    const { data } = await publicAPI.getConstituencies();
+    if (data.success && data.data && data.data.length > 0) {
+      rows.value = data.data.map(c => ({
+        id: c.id,
+        province: c.province || c.name,
+        area: c.name || `เขต ${c.district_number || c.districtNumber}`,
+        no: c.district_number || c.districtNumber || c.id,
+        status: c.status
+      }));
+    }
+  } catch (err) {
+    console.warn('Using fallback constituency data:', err.message);
+  } finally {
+    loadingConstituencies.value = false;
+  }
+
+  // Load parties
+  loadingParties.value = true;
+  try {
+    const { data } = await publicAPI.getParties();
+    if (data.success && data.data && data.data.length > 0) {
+      parties.value = data.data.map((p, index) => ({
+        id: p.id,
+        no: p.id || index + 1,
+        name: p.name,
+        logoUrl: p.logoUrl || p.logo_url
+      }));
+    }
+  } catch (err) {
+    console.warn('Using fallback party data:', err.message);
+    parties.value = [
+      { id: 1, no: 1, name: "พรรคก้าวไกล" },
+      { id: 2, no: 2, name: "พรรคเพื่อไทย" },
+      { id: 3, no: 3, name: "พรรคประชาธิปัตย์" },
+      { id: 4, no: 4, name: "พรรคภูมิใจไทย" },
+      { id: 5, no: 5, name: "พรรคพลังประชารัฐ" },
+    ];
+  } finally {
+    loadingParties.value = false;
+  }
+});
 
 /** Dropdown options (unique provinces from data) */
 const provinces = computed(() => {

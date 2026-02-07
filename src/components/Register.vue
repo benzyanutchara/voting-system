@@ -4,7 +4,7 @@
       <h1 class="title">Voting System 953713 - 2568</h1>
 
       <nav class="segmented" aria-label="Voting navigation">
-        <button class="seg-btn" type="button" @click="navigateTo('VotingSystem')">
+        <button class="seg-btn" type="button" @click="$router.push('/')">
           <span class="seg-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M4 7.5h6M4 12h10M4 16.5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -14,7 +14,7 @@
           ผลการเลือกตั้ง
         </button>
 
-        <button class="seg-btn" type="button" @click="navigateTo('Candidates')">
+        <button class="seg-btn" type="button" @click="$router.push('/parties')">
           <span class="seg-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/>
@@ -55,6 +55,25 @@
                 pattern="[0-9]{13}"
                 required
               />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                Title <span class="required">*</span>
+              </label>
+              <select
+                v-model="formData.title"
+                class="form-select"
+                required
+              >
+                <option value="" disabled>เลือกคำนำหน้า</option>
+                <option value="นาย">นาย</option>
+                <option value="นาง">นาง</option>
+                <option value="นางสาว">นางสาว</option>
+                <option value="Mr">Mr</option>
+                <option value="Mrs">Mrs</option>
+                <option value="Ms">Ms</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -101,17 +120,18 @@
                 Election Area <span class="required">*</span>
               </label>
               <select
-                v-model="formData.electionArea"
+                v-model="formData.constituencyId"
                 class="form-select"
                 required
               >
-                <option value="" disabled>Select area</option>
-                <option value="area1">กรุงเทพมหานคร เขต 1</option>
-                <option value="area2">กรุงเทพมหานคร เขต 2</option>
-                <option value="area3">กรุงเทพมหานคร เขต 3</option>
-                <option value="area4">ชลบุรี เขต 1</option>
-                <option value="area5">เชียงใหม่ เขต 1</option>
-                <option value="area6">ภูเก็ต เขต 1</option>
+                <option value="" disabled>{{ loadingConstituencies ? 'กำลังโหลด...' : 'เลือกเขตเลือกตั้ง' }}</option>
+                <option
+                  v-for="c in constituencies"
+                  :key="c.id"
+                  :value="c.id"
+                >
+                  {{ c.province || c.name }} เขต {{ c.district_number || c.districtNumber || '' }}
+                </option>
               </select>
             </div>
 
@@ -142,11 +162,15 @@
               />
             </div>
 
-            <button type="submit" class="btn-register">Register</button>
+            <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
+
+            <button type="submit" class="btn-register" :disabled="loading">
+              {{ loading ? 'กำลังลงทะเบียน...' : 'Register' }}
+            </button>
 
             <div class="login-link">
               Already have an account? 
-              <a href="#" @click.prevent="goToLogin">Log In</a>
+              <a href="#" @click.prevent="$router.push('/login')">Log In</a>
             </div>
           </form>
         </div>
@@ -156,60 +180,99 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useAuthStore } from "../stores/auth.store";
+import { publicAPI } from "../api/public.api";
+import Swal from "sweetalert2";
 
-// eslint-disable-next-line no-undef
-const emit = defineEmits(['navigate', 'login']);
+const authStore = useAuthStore();
+
+const constituencies = ref([]);
+const loadingConstituencies = ref(false);
+const loading = ref(false);
+const errorMsg = ref("");
 
 const formData = ref({
   nationalId: "",
+  title: "",
   firstName: "",
   lastName: "",
   address: "",
-  electionArea: "",
+  constituencyId: "",
   password: "",
   confirmPassword: ""
 });
 
-function navigateTo(pageName) {
-  emit('navigate', pageName);
-}
+// โหลดรายชื่อเขตเลือกตั้งจาก API
+onMounted(async () => {
+  loadingConstituencies.value = true;
+  try {
+    const { data } = await publicAPI.getConstituencies();
+    if (data.success) {
+      constituencies.value = data.data;
+    }
+  } catch (err) {
+    console.error("Failed to load constituencies:", err);
+  } finally {
+    loadingConstituencies.value = false;
+  }
+});
 
-function handleRegister() {
+async function handleRegister() {
   // ตรวจสอบเลขบัตรประชาชน 13 หลัก
   if (!/^[0-9]{13}$/.test(formData.value.nationalId)) {
-    alert("กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง");
+    errorMsg.value = "กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง";
+    return;
+  }
+
+  if (!formData.value.title) {
+    errorMsg.value = "กรุณาเลือกคำนำหน้า";
     return;
   }
 
   // ตรวจสอบว่า password ตรงกัน
   if (formData.value.password !== formData.value.confirmPassword) {
-    alert("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
+    errorMsg.value = "รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง";
     return;
   }
 
   // ตรวจสอบความยาวรหัสผ่าน
   if (formData.value.password.length < 6) {
-    alert("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+    errorMsg.value = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     return;
   }
 
-  console.log("Register data:", formData.value);
-  
-  // TODO: ส่งข้อมูลไปยัง backend จริง
-  // ตอนนี้จำลองว่าลงทะเบียนสำเร็จและ login อัตโนมัติ
-  
-  alert("ลงทะเบียนสำเร็จ! กำลังเข้าสู่ระบบ...");
-  
-  // ส่งข้อมูล login ไปยัง App component
-  emit('login', {
-    userId: formData.value.nationalId,
-    userName: `${formData.value.firstName} ${formData.value.lastName}`
-  });
-}
+  if (!formData.value.constituencyId) {
+    errorMsg.value = "กรุณาเลือกเขตเลือกตั้ง";
+    return;
+  }
 
-function goToLogin() {
-  emit('navigate', 'VoterLogin');
+  loading.value = true;
+  errorMsg.value = "";
+
+  try {
+    await authStore.register({
+      nationalId: formData.value.nationalId,
+      password: formData.value.password,
+      title: formData.value.title,
+      firstName: formData.value.firstName,
+      lastName: formData.value.lastName,
+      address: formData.value.address,
+      constituencyId: Number(formData.value.constituencyId)
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "ลงทะเบียนสำเร็จ!",
+      text: "กำลังเข้าสู่ระบบ...",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    errorMsg.value = err.response?.data?.error || "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่";
+  } finally {
+    loading.value = false;
+  }
 }
 </script>
 

@@ -233,3 +233,15 @@ form {
     font-size: 20px;
   }
 }
+
+/* Error message */
+.error-msg {
+  color: #e53e3e;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+}
