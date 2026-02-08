@@ -236,6 +236,7 @@ import { computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { publicAPI } from "../api/public.api";
 import { useAuthStore } from "../stores/auth.store";
+import { mockConstituencies, mockParties, getMockPartyDetails } from "../data/mockData";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -282,12 +283,19 @@ async function fetchPartyDetails(partyId) {
     const { data } = await publicAPI.getPartyDetails(partyId);
     if (data.success) {
       selectedParty.value = { ...data.data, no: data.data.id };
+    } else {
+      const mock = getMockPartyDetails(partyId);
+      if (mock) selectedParty.value = { ...mock, no: mock.id };
     }
   } catch (err) {
-    console.error('Failed to load party details:', err);
-    // Fallback: show the basic party info
-    const p = parties.value.find(p => p.id === partyId);
-    if (p) selectedParty.value = p;
+    console.warn('Using mock party details:', err.message);
+    const mock = getMockPartyDetails(partyId);
+    if (mock) {
+      selectedParty.value = { ...mock, no: mock.id };
+    } else {
+      const p = parties.value.find(p => p.id === partyId);
+      if (p) selectedParty.value = p;
+    }
   }
 }
 
@@ -476,7 +484,14 @@ onMounted(async () => {
       }));
     }
   } catch (err) {
-    console.warn('Using fallback constituency data:', err.message);
+    console.warn('Using mock constituency data:', err.message);
+    rows.value = mockConstituencies.map(c => ({
+      id: c.id,
+      province: c.province,
+      area: c.name,
+      no: c.district_number,
+      status: c.status
+    }));
   } finally {
     loadingConstituencies.value = false;
   }
@@ -495,13 +510,12 @@ onMounted(async () => {
     }
   } catch (err) {
     console.warn('Using fallback party data:', err.message);
-    parties.value = [
-      { id: 1, no: 1, name: "พรรคก้าวไกล" },
-      { id: 2, no: 2, name: "พรรคเพื่อไทย" },
-      { id: 3, no: 3, name: "พรรคประชาธิปัตย์" },
-      { id: 4, no: 4, name: "พรรคภูมิใจไทย" },
-      { id: 5, no: 5, name: "พรรคพลังประชารัฐ" },
-    ];
+    parties.value = mockParties.map(p => ({
+      id: p.id,
+      no: p.id,
+      name: p.name,
+      logoUrl: null
+    }));
   } finally {
     loadingParties.value = false;
   }

@@ -82,6 +82,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { publicAPI } from "../api/public.api";
+import { mockParties } from "../data/mockData";
 
 const router = useRouter();
 const loading = ref(false);
@@ -92,23 +93,19 @@ onMounted(async () => {
   loading.value = true;
   try {
     const { data } = await publicAPI.getParties();
-    if (data.success && data.data) {
+    if (data.success && data.data && data.data.length > 0) {
       parties.value = data.data.map((p, index) => ({
         id: p.id,
         no: p.id || index + 1,
         name: p.name,
         logoUrl: p.logoUrl || p.logo_url
       }));
+    } else {
+      parties.value = mockParties.map(p => ({ id: p.id, no: p.id, name: p.name, logoUrl: null }));
     }
   } catch (err) {
-    console.warn('Using fallback party data:', err.message);
-    parties.value = [
-      { id: 1, no: 1, name: "พรรคก้าวไกล" },
-      { id: 2, no: 2, name: "พรรคเพื่อไทย" },
-      { id: 3, no: 3, name: "พรรคประชาธิปัตย์" },
-      { id: 4, no: 4, name: "พรรคภูมิใจไทย" },
-      { id: 5, no: 5, name: "พรรคพลังประชารัฐ" },
-    ];
+    console.warn('Using mock party data:', err.message);
+    parties.value = mockParties.map(p => ({ id: p.id, no: p.id, name: p.name, logoUrl: null }));
   } finally {
     loading.value = false;
   }

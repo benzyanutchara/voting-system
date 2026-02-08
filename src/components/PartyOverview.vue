@@ -98,6 +98,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { publicAPI } from "../api/public.api";
+import { mockPartyOverview } from "../data/mockData";
 
 const overviewData = ref({ totalSeats: 0, closedConstituencies: 0, parties: [] });
 const loading = ref(false);
@@ -116,10 +117,12 @@ async function fetchOverview() {
     if (data.success) {
       overviewData.value = data.data;
     } else {
-      error.value = data.error || "ไม่สามารถโหลดข้อมูลได้";
+      console.warn('API returned error, using mock data');
+      overviewData.value = mockPartyOverview;
     }
   } catch (err) {
-    error.value = err.response?.data?.error || "เกิดข้อผิดพลาด กรุณาลองใหม่";
+    console.warn('Using mock party overview:', err.message);
+    overviewData.value = mockPartyOverview;
   } finally {
     loading.value = false;
   }

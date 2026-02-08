@@ -204,15 +204,20 @@ const formData = ref({
 });
 
 // โหลดรายชื่อเขตเลือกตั้งจาก API
+import { mockConstituencies } from "../data/mockData";
+
 onMounted(async () => {
   loadingConstituencies.value = true;
   try {
     const { data } = await publicAPI.getConstituencies();
-    if (data.success) {
+    if (data.success && data.data && data.data.length > 0) {
       constituencies.value = data.data;
+    } else {
+      constituencies.value = mockConstituencies;
     }
   } catch (err) {
-    console.error("Failed to load constituencies:", err);
+    console.warn("Using mock constituencies:", err.message);
+    constituencies.value = mockConstituencies;
   } finally {
     loadingConstituencies.value = false;
   }
