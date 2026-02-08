@@ -123,16 +123,18 @@ onMounted(fetchPartyDetails);
 </script>
 
 <style scoped>
-.page { min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; }
-.wrap { max-width: 900px; margin: 0 auto; }
-.title { text-align: center; color: #fff; font-size: 1.5rem; margin-bottom: 16px; }
-.segmented { display: flex; gap: 4px; background: rgba(255,255,255,.15); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
-.seg-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; border: none; background: transparent; color: rgba(255,255,255,.7); border-radius: 10px; cursor: pointer; font-size: .85rem; transition: .2s; }
-.seg-btn.active { background: #fff; color: #764ba2; font-weight: 600; }
-.seg-ico { width: 18px; height: 18px; }
-.card { background: #fff; border-radius: 16px; padding: 24px; min-height: 300px; }
+.page { min-height: 100vh; background: #ffffff; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 22px 48px; }
+.title { margin: 0 0 18px; font-size: 34px; font-weight: 800; letter-spacing: -0.3px; color: #2b2f36; }
+.segmented { background: #e9ecef; border-radius: 28px; padding: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0 18px; }
+.seg-btn { flex: 1; height: 48px; border: 0; border-radius: 22px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 16px; font-weight: 700; color: #2f3742; transition: background 0.2s ease; }
+.seg-btn:hover { background: rgba(255, 255, 255, 0.5); }
+.seg-btn.active { background: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06); }
+.seg-ico { width: 20px; height: 20px; display: inline-grid; place-items: center; opacity: 0.9; }
+.seg-ico svg { width: 20px; height: 20px; }
+.card { border: 1px solid #cfd6de; border-radius: 18px; background: #fff; padding: 24px; min-height: 300px; }
 .loading-center, .error-center { text-align: center; padding: 60px 20px; color: #666; }
-.spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #764ba2; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+.spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #374151; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .party-detail-header { display: flex; gap: 20px; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
@@ -148,10 +150,10 @@ onMounted(fetchPartyDetails);
 .candidate-avatar svg { width: 28px; height: 28px; color: #aaa; }
 .candidate-name { font-weight: 600; color: #333; font-size: .9rem; }
 .candidate-details { display: flex; gap: 8px; margin-top: 4px; font-size: .8rem; color: #888; }
-.candidate-no strong { color: #764ba2; }
+.candidate-no strong { color: #374151; }
 .empty-candidates { text-align: center; padding: 40px; color: #999; }
 
-.btn-back { margin-top: 24px; padding: 10px 24px; background: #764ba2; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: .9rem; }
-.btn-back:hover { background: #653a91; }
-.btn-submit { padding: 10px 24px; background: #764ba2; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px; }
+.btn-back { margin-top: 24px; padding: 10px 24px; background: #6b7280; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: .9rem; }
+.btn-back:hover { background: #4b5563; }
+.btn-submit { padding: 10px 24px; background: #6b7280; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px; }
 </style>

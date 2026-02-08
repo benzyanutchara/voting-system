@@ -15,9 +15,15 @@ export default {
   box-sizing: border-box;
 }
 
+html, body {
+  background: #ffffff;
+}
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+  min-height: 100vh;
 }
 </style>
